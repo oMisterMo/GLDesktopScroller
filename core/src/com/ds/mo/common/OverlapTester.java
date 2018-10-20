@@ -15,7 +15,8 @@ public final class OverlapTester {
     }
 
     public static boolean overlapCircles(Circle c1, Circle c2) {
-        float distance = c1.center.distanceSqr(c2.center);
+        float distance = c1.center.dst2(c2.center);
+//        float distance = c1.center.distanceSqr(c2.center);
         float radiusSum = c1.radius + c2.radius;
         return distance <= radiusSum * radiusSum;
     }
@@ -46,15 +47,15 @@ public final class OverlapTester {
             nearestY = r.lowerLeft.y + r.height;
         }
 
-        return c.center.distanceSqr(nearestX, nearestY) < c.radius * c.radius;
+        return c.center.dst2(nearestX, nearestY) < c.radius * c.radius;
     }
 
-    public static boolean pointInCircle(Circle c, Vector2D p) {
-        return c.center.distanceSqr(p) < c.radius * c.radius;
+    public static boolean pointInCircle(Circle c, Vector2 p) {
+        return c.center.dst2(p) < c.radius * c.radius;
     }
 
     public static boolean pointInCircle(Circle c, float x, float y) {
-        return c.center.distanceSqr(x, y) < c.radius * c.radius;
+        return c.center.dst2(x, y) < c.radius * c.radius;
     }
 
     public static boolean pointInRectangle(Rectangle r, Vector2D p) {

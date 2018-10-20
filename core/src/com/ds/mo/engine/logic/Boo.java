@@ -1,6 +1,7 @@
 package com.ds.mo.engine.logic;
 
 import com.badlogic.gdx.math.Vector2;
+import com.ds.mo.common.Circle;
 import com.ds.mo.common.DynamicGameObject;
 
 public class Boo extends DynamicGameObject {
@@ -20,6 +21,8 @@ public class Boo extends DynamicGameObject {
     private final Mo player;
     private Vector2 booToPlayer = new Vector2();
 
+    public Circle bounds;
+
     public Boo(float x, float y, Mo player) {
         super(x, y, BOO_WIDTH, BOO_HEIGHT);
         stateTime = 0;
@@ -30,6 +33,7 @@ public class Boo extends DynamicGameObject {
         this.facing = new Vector2(1, 0);
         setInitialFacing();
 //        followTarget();
+        bounds = new Circle(x + BOO_WIDTH / 2, y + BOO_HEIGHT / 2, BOO_WIDTH / 2);
     }
 
     private void setInitialFacing() {
@@ -109,6 +113,7 @@ public class Boo extends DynamicGameObject {
         //or
 //        accelerate(accel); //velocity.add(accel)
         position.add(velocity.x * deltaTime, velocity.y * deltaTime);
-        bounds.lowerLeft.set(position);
+//        bounds.lowerLeft.set(position);
+        bounds.center.set(position).add(BOO_WIDTH / 2, BOO_HEIGHT / 2);
     }
 }

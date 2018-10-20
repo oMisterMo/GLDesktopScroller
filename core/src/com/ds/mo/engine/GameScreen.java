@@ -14,16 +14,15 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 //import com.badlogic.gdx.math.collision.Ray;
 import com.ds.mo.common.Animation;
-import com.ds.mo.common.Helper;
 import com.ds.mo.common.OverlapTester;
 import com.ds.mo.common.Particle;
+import com.ds.mo.common.Rectangle;
 import com.ds.mo.engine.effects.FireParticleSystem;
 import com.ds.mo.engine.logic.Boo;
 import com.ds.mo.engine.logic.Goomba;
 import com.ds.mo.engine.logic.Level;
 import com.ds.mo.engine.logic.Mo;
 import com.ds.mo.engine.logic.Tile;
-import com.ds.mo.common.Ray;
 import com.ds.mo.engine.logic.World;
 
 public class GameScreen implements Screen {
@@ -38,10 +37,7 @@ public class GameScreen implements Screen {
     private OrthographicCamera camera;
     private OrthographicCamera guiCam;
     private Assets assets;
-//    private Level level;
-//    private Mo mo;
-//    private Boo boo;
-//    private Goomba goomba;
+
     private World world;
 
     private static final float COL_DIST = 1;
@@ -58,7 +54,7 @@ public class GameScreen implements Screen {
     private boolean left_hit = false;
     private boolean right_hit = false;
 
-    private boolean debugMode = true;
+    private boolean debugMode = false;
     private boolean drawMode = true;
 
     private FireParticleSystem fs;
@@ -79,12 +75,7 @@ public class GameScreen implements Screen {
         guiCam = new OrthographicCamera();
         guiCam.setToOrtho(false, WORLD_WIDTH, WORLD_HEIGHT);
 
-//        level = new Level();
-//        level.tiles[Level.NO_OF_TILES_Y - 1][0].type = 3;
-//        level.tiles[Level.NO_OF_TILES_Y - 1][0].solid = true;
-//        mo = new Mo(16 * 3, 16 * 8, level);
-//        boo = new Boo(100, 100, mo);
-//        goomba = new Goomba(0, 100);
+        //Init World
         world = new World();
 
         elapsedTime = 0;
@@ -92,7 +83,7 @@ public class GameScreen implements Screen {
         initFireSystem();
 
 
-        Vector2 v = new Vector2(200,200);
+        Vector2 v = new Vector2(200, 200);
         System.out.println("vector: " + v.angle());
 
     }
@@ -101,7 +92,6 @@ public class GameScreen implements Screen {
         fs = new FireParticleSystem(new Vector2(200, 100), FireParticleSystem.RED);
 //        fs = new FireParticleSystem(new Vector2(70 + (16 * 6), 54), FireParticleSystem.RED);
     }
-
 
     private void input() {
         if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
@@ -116,17 +106,37 @@ public class GameScreen implements Screen {
             System.out.println("DrawMode: " + drawMode);
         }
 
-//        if (Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
-//            System.out.println("click");
-//            int x = Gdx.input.getX() / 3;
-//            int y = (int) WORLD_HEIGHT - Gdx.input.getY() / 3;
-//            System.out.println(x + ", " + y);
-//            Tile door = level.tiles[3][14];
-//            if (OverlapTester.pointInRectangle(door.bounds, x, y)) {
-//                System.out.println("TOUCHED DOOR");
-//            }
-//            return;
-//        }
+        if(Gdx.input.isKeyJustPressed(Input.Keys.O)){
+            //Action key pressed
+            enterDoors();
+        }
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.L)) {
+            game.setScreen(new PlainWorldScreen(game));
+            return;
+        }
+    }
+
+    private void enterDoors(){
+        Rectangle mo = world.mo.bounds;
+        Rectangle door1 = world.level.tiles[world.door1.y][world.door1.x].bounds;
+        Rectangle door2 = world.level.tiles[world.door2.y][world.door2.x].bounds;
+        Rectangle door3 = world.level.tiles[world.door3.y][world.door3.x].bounds;
+        if(OverlapTester.overlapRectangles(mo, door1)){
+            System.out.println("PRESSED O IN DOOR");
+            game.setScreen(new PlainWorldScreen(game));
+            return;
+        }
+        if(OverlapTester.overlapRectangles(mo, door2)){
+            System.out.println("PRESSED O IN DOOR");
+            game.setScreen(new FairWorldScreen(game));
+            return;
+        }
+        if(OverlapTester.overlapRectangles(mo, door3)){
+            System.out.println("PRESSED O IN DOOR");
+            game.setScreen(new InsaneWorldScreen(game));
+            return;
+        }
     }
 
     /**
@@ -163,6 +173,7 @@ public class GameScreen implements Screen {
         return level.getTile(pointToTileCoordsX(x), pointToTileCoordsY(y));
     }
 
+    //DEBUG MODE-------------------------------------------------------------------------
     private void drawWorldBounds2() {
         for (int y = 0; y < Level.NO_OF_TILES_Y; y++) {
             for (int x = 0; x < Level.NO_OF_TILES_X; x++) {
@@ -182,7 +193,7 @@ public class GameScreen implements Screen {
                 if (!tile.solid) {
                     continue;
                 }
-                switch (tile.type) {
+                switch (tile.id) {
                     case Tile.WALL:
                     case Tile.GROUND_TL:
                     case Tile.GROUND_TM:
@@ -221,13 +232,6 @@ public class GameScreen implements Screen {
         }
     }
 
-    private void drawBooBounds() {
-        Boo boo = world.boo;
-        shapeRenderer.setColor(Color.GOLD);
-        shapeRenderer.rect(boo.bounds.lowerLeft.x, boo.bounds.lowerLeft.y,
-                boo.bounds.width, boo.bounds.height);
-    }
-
     private void drawMoBounds() {
         Mo mo = world.mo;
         shapeRenderer.setColor(Color.WHITE);
@@ -235,188 +239,13 @@ public class GameScreen implements Screen {
                 mo.bounds.width, mo.bounds.height);
     }
 
-    private void drawGoombaBounds() {
-        Goomba goomba = world.goomba;
-        shapeRenderer.setColor(Color.FOREST);
-        shapeRenderer.rect(goomba.bounds.lowerLeft.x, goomba.bounds.lowerLeft.y,
-                goomba.bounds.width, goomba.bounds.height);
-    }
-
-    private void drawWorld() {
-        Level level = world.level;
-        for (int y = 0; y < Level.NO_OF_TILES_Y; y++) {
-            for (int x = 0; x < Level.NO_OF_TILES_X; x++) {
-                Tile tile = level.tiles[y][x];
-                batcher.setColor(1, 1, 1, 1);
-                switch (tile.type) {
-                    case Tile.WALL:
-                        batcher.draw(Assets.wall, tile.position.x, tile.position.y);
-                        break;
-                    case Tile.GROUND_TL:
-                        if (tile.hit) {
-                            batcher.setColor(1, 0, 0, 1);
-                        } else {
-                            batcher.setColor(1, 1, 1, 1);
-                        }
-                        batcher.draw(Assets.ground_tl, tile.position.x, tile.position.y);
-                        break;
-                    case Tile.GROUND_TM:
-                        if (tile.hit) {
-                            batcher.setColor(1, 0, 0, 1);
-                        } else {
-                            batcher.setColor(1, 1, 1, 1);
-                        }
-                        batcher.draw(Assets.ground_tm, tile.position.x, tile.position.y);
-                        break;
-                    case Tile.GROUND_TR:
-                        if (tile.hit) {
-                            batcher.setColor(1, 0, 0, 1);
-                        } else {
-                            batcher.setColor(1, 1, 1, 1);
-                        }
-                        batcher.draw(Assets.ground_tr, tile.position.x, tile.position.y);
-                        break;
-                    case Tile.GROUND_ML:
-                        batcher.draw(Assets.ground_ml, tile.position.x, tile.position.y);
-                        break;
-                    case Tile.GROUND_MM:
-                        if (tile.hit) {
-                            batcher.setColor(1, 0, 0, 1);
-                        } else {
-                            batcher.setColor(1, 1, 1, 1);
-                        }
-                        batcher.draw(Assets.ground_mm, tile.position.x, tile.position.y);
-                        break;
-                    case Tile.GROUND_MR:
-                        batcher.draw(Assets.ground_mr, tile.position.x, tile.position.y);
-                        break;
-                    case Tile.GROUND_LL:
-                        batcher.draw(Assets.ground_ll, tile.position.x, tile.position.y);
-                        break;
-                    case Tile.GROUND_LM:
-                        batcher.draw(Assets.ground_lm, tile.position.x, tile.position.y);
-                        break;
-                    case Tile.GROUND_LR:
-                        batcher.draw(Assets.ground_lr, tile.position.x, tile.position.y);
-                        break;
-                    case Tile.DOOR0:
-                        batcher.draw(Assets.door0, tile.position.x, tile.position.y);
-                        break;
-                    case Tile.DOOR1:
-                        batcher.draw(Assets.door1, tile.position.x, tile.position.y);
-                        break;
-                    case Tile.DOOR2:
-                        batcher.draw(Assets.door2, tile.position.x, tile.position.y);
-                        break;
-                    case Tile.DOOR3:
-                        batcher.draw(Assets.door3, tile.position.x, tile.position.y);
-                        break;
-                    case Tile.DOOR4:
-                        batcher.draw(Assets.door4, tile.position.x, tile.position.y);
-                        break;
-                    case Tile.DOOR5:
-                        batcher.draw(Assets.door5, tile.position.x, tile.position.y);
-                        break;
-                    case Tile.BIGDOOR0:
-                        batcher.draw(Assets.bigDoor0, tile.position.x, tile.position.y);
-                        break;
-                    case Tile.BIGDOOR1:
-                        batcher.draw(Assets.bigDoor1, tile.position.x, tile.position.y);
-                        break;
-                    case Tile.BIGDOOR2:
-                        batcher.draw(Assets.bigDoor2, tile.position.x, tile.position.y);
-                        break;
-                    case Tile.BIGDOOR3:
-                        batcher.draw(Assets.bigDoor3, tile.position.x, tile.position.y);
-                        break;
-                    case Tile.BIGDOOR4:
-                        batcher.draw(Assets.bigDoor4, tile.position.x, tile.position.y);
-                        break;
-                    case Tile.BIGDOOR5:
-                        batcher.draw(Assets.bigDoor5, tile.position.x, tile.position.y);
-                        break;
-                    case Tile.GRASS_T0:
-                        batcher.draw(Assets.grass_t0, tile.position.x, tile.position.y);
-                        break;
-                    case Tile.GRASS_T1:
-                        batcher.draw(Assets.grass_t1, tile.position.x, tile.position.y);
-                        break;
-                    case Tile.GRASS_T2:
-                        batcher.draw(Assets.grass_t2, tile.position.x, tile.position.y);
-                        break;
-                    case Tile.GRASS_T3:
-                        batcher.draw(Assets.grass_t3, tile.position.x, tile.position.y);
-                        break;
-
-                    default:
-                        //Draw nothing
-//                        batcher.draw(Assets.wall, tile.position.x, tile.position.y);
-                }
+    private void drawBlocks() {
+        shapeRenderer.setColor(0, 1, 1, 0.1f);
+        for (int y = 0; y < 3; y++) {
+            for (int x = 0; x < 9; x++) {
+                shapeRenderer.rect(128 * x, 128 * y, 128, 128);
             }
         }
-    }
-
-    private void drawWorld2() {
-        Level level = world.level;
-        batcher.setColor(Color.WHITE);
-        for (int y = 0; y < Level.NO_OF_TILES_Y; y++) {
-            for (int x = 0; x < Level.NO_OF_TILES_X; x++) {
-                Tile tile = level.tiles[y][x];
-                if (tile.type == -1) continue;
-//                System.out.println("x,y: [" + x + ", " + y + "]");
-                batcher.draw(Assets.T[tile.type], tile.position.x, tile.position.y);
-            }
-        }
-    }
-
-    private void drawBoo() {
-        Boo boo = world.boo;
-        batcher.setColor(Color.WHITE);
-        switch (boo.state) {
-            case Boo.STATE_IDLE:
-                //Mo.Left/Right == -1/1 respectively
-                if (boo.facing.x == Mo.RIGHT) {
-                    batcher.draw(Assets.T[1], boo.position.x, boo.position.y,
-                            Boo.BOO_WIDTH, Boo.BOO_HEIGHT);
-                } else if (boo.facing.x == Mo.LEFT) {
-                    batcher.draw(Assets.T[1], boo.position.x + Boo.BOO_WIDTH, boo.position.y,
-                            -Boo.BOO_WIDTH, Boo.BOO_HEIGHT);
-                }
-                break;
-            case Boo.STATE_CHASE:
-                if (boo.facing.x == Mo.RIGHT) {
-                    batcher.draw(Assets.T[2], boo.position.x, boo.position.y,
-                            Boo.BOO_WIDTH, Boo.BOO_HEIGHT);
-                } else if (boo.facing.x == Mo.LEFT) {
-                    batcher.draw(Assets.T[2], boo.position.x + Boo.BOO_WIDTH, boo.position.y,
-                            -Boo.BOO_WIDTH, Boo.BOO_HEIGHT);
-                }
-                break;
-
-        }
-    }
-
-    private void drawGoomba() {
-        Goomba goomba = world.goomba;
-        batcher.setColor(Color.WHITE);
-        TextureRegion region = Assets.goombaAnim.getKeyFrame(goomba.stateTime,
-                Animation.ANIMATION_LOOPING);
-        // TODO: 10/10/2018 guaranteed facing LEFT or RIGHT (don't need second condition)
-        if (goomba.facing.x == Goomba.RIGHT) {
-            batcher.draw(region, goomba.position.x, goomba.position.y,
-                    Goomba.GOOMBA_WIDTH, Goomba.GOOMBA_HEIGHT);
-        } else if (goomba.facing.x == Goomba.LEFT) {
-            batcher.draw(region, goomba.position.x + Goomba.GOOMBA_WIDTH, goomba.position.y,
-                    -Goomba.GOOMBA_WIDTH, Goomba.GOOMBA_HEIGHT);
-        }
-    }
-
-    private void drawMo() {
-        Mo mo = world.mo;
-        batcher.setColor(Color.RED);
-        batcher.draw(Assets.wall, mo.position.x, mo.position.y);
-//        batcher.setColor(Color.BLACK);
-//        batcher.draw(Assets.wall, mo.bounds.lowerLeft.x, mo.bounds.lowerLeft.y);
     }
 
     private void singleRay() {
@@ -560,12 +389,24 @@ public class GameScreen implements Screen {
         completeRay();
     }
 
-    private void drawBlocks() {
-        shapeRenderer.setColor(0, 1, 1, 0.1f);
-        for (int y = 0; y < 3; y++) {
-            for (int x = 0; x < 9; x++) {
-                shapeRenderer.rect(128 * x, 128 * y, 128, 128);
+    private void drawPlayerInfo() {
+        Mo mo = world.mo;
+        font.setColor(Color.WHITE);
+        font.draw(batcher, "pos: " + mo.position, 100, Level.WORLD_HEIGHT * 3 - 10);
+        font.draw(batcher, "xsp: " + mo.xsp, 100, Level.WORLD_HEIGHT * 3 - 10 - 20);
+        font.draw(batcher, "ysp: " + mo.ysp, 100, Level.WORLD_HEIGHT * 3 - 10 - 40);
+
+        font.draw(batcher, "grounded: ", 400, Level.WORLD_HEIGHT * 3 - 10);
+        font.draw(batcher, "in air: ", 400, Level.WORLD_HEIGHT * 3 - 10 - 20);
+        if (mo.grounded || mo.inAir) {
+            font.setColor(Color.GREEN);
+            int shift;
+            if (mo.inAir) {
+                shift = -20;
+            } else {
+                shift = 0;
             }
+            font.draw(batcher, "YES", 480, Level.WORLD_HEIGHT * 3 - 10 + shift);
         }
     }
 
@@ -578,6 +419,155 @@ public class GameScreen implements Screen {
         shapeRenderer.rect(bl.bounds.lowerLeft.x, bl.bounds.lowerLeft.y, bl.bounds.width, bl.bounds.height);
         shapeRenderer.rect(br.bounds.lowerLeft.x, br.bounds.lowerLeft.y, br.bounds.width, br.bounds.height);
 
+    }
+
+    private void drawDoorBounds() {
+        shapeRenderer.setColor(Color.BROWN);
+        Tile t = world.level.tiles[world.door1.y][world.door1.x];
+        shapeRenderer.rect(t.bounds.lowerLeft.x, t.bounds.lowerLeft.y,
+                t.bounds.width, t.bounds.height);
+        t = world.level.tiles[world.door2.y][world.door2.x];
+        shapeRenderer.rect(t.bounds.lowerLeft.x, t.bounds.lowerLeft.y,
+                t.bounds.width, t.bounds.height);
+        t = world.level.tiles[world.door3.y][world.door3.x];
+        shapeRenderer.rect(t.bounds.lowerLeft.x, t.bounds.lowerLeft.y,
+                t.bounds.width, t.bounds.height);
+    }
+
+    //GRAPHICS MODE---------------------------------------------------------------------
+    private void drawWorld() {
+        Level level = world.level;
+        for (int y = 0; y < Level.NO_OF_TILES_Y; y++) {
+            for (int x = 0; x < Level.NO_OF_TILES_X; x++) {
+                Tile tile = level.tiles[y][x];
+                batcher.setColor(1, 1, 1, 1);
+                switch (tile.id) {
+                    case Tile.WALL:
+                        batcher.draw(Assets.wall, tile.position.x, tile.position.y);
+                        break;
+                    case Tile.GROUND_TL:
+                        if (tile.hit) {
+                            batcher.setColor(1, 0, 0, 1);
+                        } else {
+                            batcher.setColor(1, 1, 1, 1);
+                        }
+                        batcher.draw(Assets.ground_tl, tile.position.x, tile.position.y);
+                        break;
+                    case Tile.GROUND_TM:
+                        if (tile.hit) {
+                            batcher.setColor(1, 0, 0, 1);
+                        } else {
+                            batcher.setColor(1, 1, 1, 1);
+                        }
+                        batcher.draw(Assets.ground_tm, tile.position.x, tile.position.y);
+                        break;
+                    case Tile.GROUND_TR:
+                        if (tile.hit) {
+                            batcher.setColor(1, 0, 0, 1);
+                        } else {
+                            batcher.setColor(1, 1, 1, 1);
+                        }
+                        batcher.draw(Assets.ground_tr, tile.position.x, tile.position.y);
+                        break;
+                    case Tile.GROUND_ML:
+                        batcher.draw(Assets.ground_ml, tile.position.x, tile.position.y);
+                        break;
+                    case Tile.GROUND_MM:
+                        if (tile.hit) {
+                            batcher.setColor(1, 0, 0, 1);
+                        } else {
+                            batcher.setColor(1, 1, 1, 1);
+                        }
+                        batcher.draw(Assets.ground_mm, tile.position.x, tile.position.y);
+                        break;
+                    case Tile.GROUND_MR:
+                        batcher.draw(Assets.ground_mr, tile.position.x, tile.position.y);
+                        break;
+                    case Tile.GROUND_LL:
+                        batcher.draw(Assets.ground_ll, tile.position.x, tile.position.y);
+                        break;
+                    case Tile.GROUND_LM:
+                        batcher.draw(Assets.ground_lm, tile.position.x, tile.position.y);
+                        break;
+                    case Tile.GROUND_LR:
+                        batcher.draw(Assets.ground_lr, tile.position.x, tile.position.y);
+                        break;
+                    case Tile.DOOR0:
+                        batcher.draw(Assets.door0, tile.position.x, tile.position.y);
+                        break;
+                    case Tile.DOOR1:
+                        batcher.draw(Assets.door1, tile.position.x, tile.position.y);
+                        break;
+                    case Tile.DOOR2:
+                        batcher.draw(Assets.door2, tile.position.x, tile.position.y);
+                        break;
+                    case Tile.DOOR3:
+                        batcher.draw(Assets.door3, tile.position.x, tile.position.y);
+                        break;
+                    case Tile.DOOR4:
+                        batcher.draw(Assets.door4, tile.position.x, tile.position.y);
+                        break;
+                    case Tile.DOOR5:
+                        batcher.draw(Assets.door5, tile.position.x, tile.position.y);
+                        break;
+                    case Tile.BIGDOOR0:
+                        batcher.draw(Assets.bigDoor0, tile.position.x, tile.position.y);
+                        break;
+                    case Tile.BIGDOOR1:
+                        batcher.draw(Assets.bigDoor1, tile.position.x, tile.position.y);
+                        break;
+                    case Tile.BIGDOOR2:
+                        batcher.draw(Assets.bigDoor2, tile.position.x, tile.position.y);
+                        break;
+                    case Tile.BIGDOOR3:
+                        batcher.draw(Assets.bigDoor3, tile.position.x, tile.position.y);
+                        break;
+                    case Tile.BIGDOOR4:
+                        batcher.draw(Assets.bigDoor4, tile.position.x, tile.position.y);
+                        break;
+                    case Tile.BIGDOOR5:
+                        batcher.draw(Assets.bigDoor5, tile.position.x, tile.position.y);
+                        break;
+                    case Tile.GRASS_T0:
+                        batcher.draw(Assets.grass_t0, tile.position.x, tile.position.y);
+                        break;
+                    case Tile.GRASS_T1:
+                        batcher.draw(Assets.grass_t1, tile.position.x, tile.position.y);
+                        break;
+                    case Tile.GRASS_T2:
+                        batcher.draw(Assets.grass_t2, tile.position.x, tile.position.y);
+                        break;
+                    case Tile.GRASS_T3:
+                        batcher.draw(Assets.grass_t3, tile.position.x, tile.position.y);
+                        break;
+
+                    default:
+                        //Draw nothing
+//                        batcher.draw(Assets.wall, tile.position.x, tile.position.y);
+                }
+            }
+        }
+    }
+
+    private void drawWorld2() {
+        Level level = world.level;
+        batcher.setColor(Color.WHITE);
+        for (int y = 0; y < Level.NO_OF_TILES_Y; y++) {
+            for (int x = 0; x < Level.NO_OF_TILES_X; x++) {
+                Tile tile = level.tiles[y][x];
+                if (tile.id == -1) continue;
+//                System.out.println("x,y: [" + x + ", " + y + "]");
+                batcher.draw(Assets.T[tile.id], tile.position.x, tile.position.y);
+            }
+        }
+    }
+
+    private void drawMo() {
+        Mo mo = world.mo;
+//        batcher.setColor(Color.RED);
+        batcher.draw(Assets.wall, mo.position.x, mo.position.y);
+//        batcher.setColor(Color.BLACK);
+//        batcher.draw(Assets.wall, mo.bounds.lowerLeft.x, mo.bounds.lowerLeft.y);
     }
 
     private void drawParticles() {
@@ -620,36 +610,6 @@ public class GameScreen implements Screen {
 //        batcher.endBatch();
     }
 
-    private void drawPlayerInfo() {
-        Mo mo = world.mo;
-        font.setColor(Color.WHITE);
-        font.draw(batcher, "pos: " + mo.position, 100, Level.WORLD_HEIGHT * 3 - 10);
-        font.draw(batcher, "xsp: " + mo.xsp, 100, Level.WORLD_HEIGHT * 3 - 10 - 20);
-        font.draw(batcher, "ysp: " + mo.ysp, 100, Level.WORLD_HEIGHT * 3 - 10 - 40);
-
-        font.draw(batcher, "grounded: ", 400, Level.WORLD_HEIGHT * 3 - 10);
-        font.draw(batcher, "in air: ", 400, Level.WORLD_HEIGHT * 3 - 10 - 20);
-        if (mo.grounded || mo.inAir) {
-            font.setColor(Color.GREEN);
-            int shift;
-            if (mo.inAir) {
-                shift = -20;
-            } else {
-                shift = 0;
-            }
-            font.draw(batcher, "YES", 480, Level.WORLD_HEIGHT * 3 - 10 + shift);
-        }
-    }
-
-    private void drawGhostInfo() {
-        Boo boo = world.boo;
-        font.setColor(Color.WHITE);
-        font.draw(batcher, "pos: " + boo.position, 100, Level.WORLD_HEIGHT * 3 - 10);
-        font.draw(batcher, "vel: " + boo.velocity, 100, Level.WORLD_HEIGHT * 3 - 30);
-        font.draw(batcher, "acc: " + boo.accel, 100, Level.WORLD_HEIGHT * 3 - 50);
-        font.draw(batcher, "angle: " + boo.velocity.angle(), 100, Level.WORLD_HEIGHT * 3 - 80);
-    }
-
     private void cameraFollowPlayer() {
         Mo mo = world.mo;
         camera.position.x += ((mo.position.x + 80) - camera.position.x) * .06;
@@ -673,23 +633,9 @@ public class GameScreen implements Screen {
 
     private void update(float deltaTime) {
         input();
-//        fps.log();
+        fps.log();
         camera.update();
         guiCam.update();
-//        /*update monsters*/
-//        boo.update(deltaTime);
-//        goomba.update(deltaTime);
-//
-//        /*update mo*/
-//        mo.update(deltaTime);
-//
-////        collisions();
-//        collisionsAll();
-//
-//        //Bound to world
-//        mo.position.x = Helper.Clamp(mo.position.x,
-//                2, Level.WORLD_WIDTH * Level.WORLD_LENGTH - Mo.MO_WIDTH - 2);
-//        mo.updateRay();
         world.update(deltaTime);
         cameraFollowPlayer();
 
@@ -716,8 +662,6 @@ public class GameScreen implements Screen {
             batcher.begin();
 //          drawWorld();
             drawWorld2();
-            drawBoo();
-            drawGoomba();
             drawMo();
             batcher.end();
         }
@@ -727,21 +671,18 @@ public class GameScreen implements Screen {
             shapeRenderer.setProjectionMatrix(camera.combined);
             shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
 //          drawWorldBounds();
-            drawBooBounds();
-            drawGoombaBounds();
             drawWorldBounds2();
             drawMoBounds();
             drawRay();
             drawBlocks();       //128 * 128
 //          drawRandom();      //test
+            drawDoorBounds();
             shapeRenderer.end();
 
             /*Draw text*/
-//            batcher.setProjectionMatrix(camera.combined.scl(0.333f));
             batcher.setProjectionMatrix(guiCam.combined.scl(0.33333f));
             batcher.begin();
-//            drawPlayerInfo();
-            drawGhostInfo();
+            drawPlayerInfo();
             batcher.end();
         }
     }

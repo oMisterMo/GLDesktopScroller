@@ -44,7 +44,7 @@ public class Tile extends GameObject {
     public static final int GRASS_T2 = 24;
     public static final int GRASS_T3 = 25;
 
-    public int type = EMPTY;    //-1
+    public int id = EMPTY;    //-1
     public boolean solid;
     public boolean hit;         // TODO: 05/11/2017 for debugging, can delete when not needed
 
@@ -54,7 +54,7 @@ public class Tile extends GameObject {
         super(x, y, TILE_WIDTH, TILE_HEIGHT);
         this.solid = false;
         this.hit = false;
-        this.type = EMPTY;
+        this.id = EMPTY;
         this.grid = grid;
     }
 
@@ -63,6 +63,6 @@ public class Tile extends GameObject {
         // TODO: 07/09/2018 or just print grid
         String s = "(" + (int) Math.floor(position.x / TILE_WIDTH) + ", "
                 + (int) Math.floor(position.y / TILE_HEIGHT) + ")";
-        return s + ": " + type;
+        return s + ": " + id;
     }
 }

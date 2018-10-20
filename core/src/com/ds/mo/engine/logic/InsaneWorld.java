@@ -4,26 +4,21 @@ import com.badlogic.gdx.math.Vector2;
 import com.ds.mo.common.Helper;
 import com.ds.mo.common.OverlapTester;
 
-import java.awt.Point;
+public class InsaneWorld {
 
-public class World {
-
-    public Level level;
+    public CustomLevel level;
     public Mo mo;
-
-    //Doors
-    public Point door1, door2, door3;
 
     //Temp variable to store the intersection point of a Ray object
     private Vector2 intersect = new Vector2();
 
-    public World() {
-        level = new Level();
-        mo = new Mo(16 * 3, 16 * 8);
+    public InsaneWorld() {
+        level = new CustomLevel(20, 11);
+        level.loadLevel("level3.json");
+        //Or set solid tiles as you load the level
+//        level.setSolidTiles();
 
-        door1 = new Point(20, Level.NO_OF_TILES_Y - 1 - 7);
-        door2 = new Point(31, Level.NO_OF_TILES_Y - 1 - 7);
-        door3 = new Point(43, Level.NO_OF_TILES_Y - 1 - 7);
+        mo = new Mo(level.center.x, level.center.y);    //initially in air
     }
 
     /**
@@ -59,13 +54,6 @@ public class World {
         return level.getTile(pointToTileCoordsX(x), pointToTileCoordsY(y));
     }
 
-    public void restart() {
-        System.out.println("R");
-        this.mo = null;
-        mo = new Mo(16 * 3, 16 * 8);
-        mo.updateRay();
-    }
-
     private void checkFloorPoint() {
         Tile bl = worldToTile(mo.position.x, mo.position.y - 1);
         Tile br = worldToTile(mo.position.x + Mo.MO_WIDTH, mo.position.y - 1);
@@ -83,8 +71,8 @@ public class World {
         int gap = 1;        //push away from tile 1 unit
         if (mo.xsp < 0) {
 //            System.out.println("Double (checking for LEFT wall");
-            for (int y = 0; y < Level.NO_OF_TILES_Y; y++) {
-                for (int x = 0; x < Level.NO_OF_TILES_X; x++) {
+            for (int y = 0; y < level.NO_OF_TILES_Y; y++) {
+                for (int x = 0; x < level.NO_OF_TILES_X; x++) {
                     Tile t = level.tiles[y][x];
                     if (!t.solid) continue;
                     if (OverlapTester.intersectRayBounds(mo.leftSen, t.bounds, intersect)) {
@@ -103,8 +91,8 @@ public class World {
         //if moving right
         if (mo.xsp > 0) {
 //            System.out.println("Double (checking for RIGHT wall");
-            for (int y = 0; y < Level.NO_OF_TILES_Y; y++) {
-                for (int x = 0; x < Level.NO_OF_TILES_X; x++) {
+            for (int y = 0; y < level.NO_OF_TILES_Y; y++) {
+                for (int x = 0; x < level.NO_OF_TILES_X; x++) {
                     Tile t = level.tiles[y][x];
                     if (!t.solid) continue;
                     if (OverlapTester.intersectRayBounds(mo.rightSen, t.bounds, intersect)) {
@@ -122,17 +110,14 @@ public class World {
 
     private void floor() {
         if (mo.ysp < 0) {
-//            System.out.println("Double (checking for FLOOR)");
             //If player is moving down
-            for (int y = 0; y < Level.NO_OF_TILES_Y; y++) {
-                for (int x = 0; x < Level.NO_OF_TILES_X; x++) {
+            for (int y = 0; y < level.NO_OF_TILES_Y; y++) {
+                for (int x = 0; x < level.NO_OF_TILES_X; x++) {
                     Tile t = level.tiles[y][x];
                     if (!t.solid) continue;
                     if (OverlapTester.intersectRayBounds(mo.leftFoot, t.bounds, intersect) ||
                             OverlapTester.intersectRayBounds(mo.rightFoot, t.bounds, intersect)) {
                         if (mo.position.y <= intersect.y) {
-//                            left_hit = true;
-//                            right_hit = true;
                             mo.grounded = true;
                             mo.inAir = false;
                             mo.position.y = t.bounds.lowerLeft.y + t.bounds.height;
@@ -141,22 +126,16 @@ public class World {
                             return;
                         }
                     }
-                    //Debugging only
-//                    if (!OverlapTester.intersectRayBounds(mo.leftFoot, t.bounds, intersect) &&
-//                            !OverlapTester.intersectRayBounds(mo.rightFoot, t.bounds, intersect)) {
-//                        left_hit = right_hit = false;
-//                    }
-                }
-            }//end floor check loop
+                }//end floor check loop
+            }
         }
     }
 
     private void ceiling() {
         if (mo.ysp > 0) {
-//            System.out.println("Double (checking for FLOOR)");
             //If player is moving up
-            for (int y = 0; y < Level.NO_OF_TILES_Y; y++) {
-                for (int x = 0; x < Level.NO_OF_TILES_X; x++) {
+            for (int y = 0; y < level.NO_OF_TILES_Y; y++) {
+                for (int x = 0; x < level.NO_OF_TILES_X; x++) {
                     Tile t = level.tiles[y][x];
                     if (!t.solid) continue;
                     int gap = 0;
@@ -192,14 +171,11 @@ public class World {
     }
 
     public void update(float deltaTime) {
-        /*update mo*/
         mo.update(deltaTime);
         //Bound to world
-        // TODO: 16/10/2018 depending on current level
         mo.position.x = Helper.Clamp(mo.position.x,
-                2, Level.WORLD_WIDTH * Level.WORLD_LENGTH - Mo.MO_WIDTH - 2);
+                2, level.WORLD_WIDTH - Mo.MO_WIDTH - 2);
         collisions();
         mo.updateRay();
     }
-
 }
