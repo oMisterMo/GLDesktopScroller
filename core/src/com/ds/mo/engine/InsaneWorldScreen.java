@@ -15,6 +15,13 @@ import com.ds.mo.engine.logic.CustomLevel;
 import com.ds.mo.engine.logic.Mo;
 import com.ds.mo.engine.logic.Tile;
 import com.ds.mo.engine.logic.InsaneWorld;
+import com.ds.mo.engine.transition.FadeInTransitionEffect;
+import com.ds.mo.engine.transition.FadeOutTransitionEffect;
+import com.ds.mo.engine.transition.TransitionEffect;
+import com.ds.mo.engine.transition.TransitionScreen;
+import com.ds.mo.engine.transition.WaitEffect;
+
+import java.util.ArrayList;
 
 public class InsaneWorldScreen implements Screen {
     private static final float WORLD_WIDTH = 320;
@@ -62,6 +69,18 @@ public class InsaneWorldScreen implements Screen {
         world = new InsaneWorld();
     }
 
+    private void transition(Screen nextScreen){
+        //Transition
+        Screen current = this;
+        Screen next = nextScreen;
+        ArrayList<TransitionEffect> effects = new ArrayList<TransitionEffect>();
+        effects.add(new FadeOutTransitionEffect(0.5f));
+        effects.add(new WaitEffect(0.5f));
+        effects.add(new FadeInTransitionEffect(0.5f));
+        Screen transitionScreen = new TransitionScreen(game, camera, current, next, effects);
+        game.setScreen(transitionScreen);
+    }
+
     private void input() {
         if (Gdx.input.isKeyJustPressed(Input.Keys.T)) {
             debugMode = !debugMode;
@@ -72,7 +91,7 @@ public class InsaneWorldScreen implements Screen {
             System.out.println("DrawMode: " + drawMode);
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.L)) {
-            game.setScreen(new GameScreen(game));
+            transition(new GameScreen(game));
             return;
         }
     }

@@ -13,13 +13,18 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.ds.mo.common.Animation;
 import com.ds.mo.common.OverlapTester;
-import com.ds.mo.engine.logic.Boo;
 import com.ds.mo.engine.logic.CustomLevel;
 import com.ds.mo.engine.logic.Goomba;
-import com.ds.mo.engine.logic.Level;
 import com.ds.mo.engine.logic.Mo;
 import com.ds.mo.engine.logic.Tile;
-import com.ds.mo.engine.logic.FairWorld;
+import com.ds.mo.engine.logic.PlainWorld;
+import com.ds.mo.engine.transition.FadeInTransitionEffect;
+import com.ds.mo.engine.transition.FadeOutTransitionEffect;
+import com.ds.mo.engine.transition.TransitionEffect;
+import com.ds.mo.engine.transition.TransitionScreen;
+import com.ds.mo.engine.transition.WaitEffect;
+
+import java.util.ArrayList;
 
 public class PlainWorldScreen implements Screen {
     private static final float WORLD_WIDTH = 320;
@@ -29,8 +34,8 @@ public class PlainWorldScreen implements Screen {
     private SpriteBatch batcher;
     private ShapeRenderer shapeRenderer;
     private BitmapFont font;
+
     private OrthographicCamera camera;
-    private OrthographicCamera guiCam;
 
     private Vector2 intersect = new Vector2();
     private Vector2 out = new Vector2();
@@ -38,11 +43,11 @@ public class PlainWorldScreen implements Screen {
     private Vector2 endPoint = new Vector2();   //Used to draw ray cast
     private Vector2 center = new Vector2();
 
+    private PlainWorld world;
 
     private boolean debugMode = false;
     private boolean drawMode = true;
 
-    private FairWorld world;
 
     public PlainWorldScreen(DesktopGame game) {
         this.game = game;
@@ -60,14 +65,29 @@ public class PlainWorldScreen implements Screen {
         //Center to small world
 //        camera.position.x = (16 * 5) /2;
 //        camera.position.y = (16 * 5) /2;
-        guiCam = new OrthographicCamera();
-        guiCam.setToOrtho(false, WORLD_WIDTH, WORLD_HEIGHT);
+//        guiCam = new OrthographicCamera();
+//        guiCam.setToOrtho(false, WORLD_WIDTH, WORLD_HEIGHT);
 
         //Init World
-        world = new FairWorld();
+        world = new PlainWorld();
+    }
+
+    private void transition(Screen nextScreen) {
+        //Transition
+        Screen current = this;
+        Screen next = nextScreen;
+        ArrayList<TransitionEffect> effects = new ArrayList<TransitionEffect>();
+        effects.add(new FadeOutTransitionEffect(0.5f));
+        effects.add(new WaitEffect(0.5f));
+        effects.add(new FadeInTransitionEffect(0.5f));
+        Screen transitionScreen = new TransitionScreen(game, camera, current, next, effects);
+        game.setScreen(transitionScreen);
     }
 
     private void input() {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
+//            world.restart();
+        }
         if (Gdx.input.isKeyJustPressed(Input.Keys.T)) {
             debugMode = !debugMode;
             System.out.println("DebugMode: " + debugMode);
@@ -77,7 +97,7 @@ public class PlainWorldScreen implements Screen {
             System.out.println("DrawMode: " + drawMode);
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.L)) {
-            game.setScreen(new GameScreen(game));
+            transition(new GameScreen(game));
             return;
         }
     }
@@ -118,25 +138,6 @@ public class PlainWorldScreen implements Screen {
         shapeRenderer.setColor(Color.WHITE);
         shapeRenderer.rect(mo.bounds.lowerLeft.x, mo.bounds.lowerLeft.y,
                 mo.bounds.width, mo.bounds.height);
-    }
-
-    //
-    private void drawBooBounds() {
-        Boo boo = world.boo;
-        shapeRenderer.setColor(Color.GOLD);
-//        shapeRenderer.rect(boo.bounds.lowerLeft.x, boo.bounds.lowerLeft.y,
-//                boo.bounds.width, boo.bounds.height);
-
-        shapeRenderer.circle(boo.bounds.center.x, boo.bounds.center.y,
-                boo.bounds.radius);
-    }
-
-    //
-    private void drawGoombaBounds() {
-        Goomba goomba = world.goomba;
-        shapeRenderer.setColor(Color.FOREST);
-        shapeRenderer.rect(goomba.bounds.lowerLeft.x, goomba.bounds.lowerLeft.y,
-                goomba.bounds.width, goomba.bounds.height);
     }
 
     private void drawRay() {
@@ -240,42 +241,6 @@ public class PlainWorldScreen implements Screen {
         }
     }
 
-    //
-    private void drawGhostInfo() {
-        Boo boo = world.boo;
-        font.setColor(Color.WHITE);
-        font.draw(batcher, "pos: " + boo.position, 100, Level.WORLD_HEIGHT * 3 - 10);
-        font.draw(batcher, "vel: " + boo.velocity, 100, Level.WORLD_HEIGHT * 3 - 30);
-        font.draw(batcher, "acc: " + boo.accel, 100, Level.WORLD_HEIGHT * 3 - 50);
-        font.draw(batcher, "angle: " + boo.velocity.angle(), 100, Level.WORLD_HEIGHT * 3 - 80);
-    }
-
-    //
-    private void drawPlayerInfo() {
-        Mo mo = world.mo;
-        font.setColor(Color.WHITE);
-        font.draw(batcher, "pos: " + mo.position, 100, Level.WORLD_HEIGHT * 3 - 10);
-        font.draw(batcher, "xsp: " + mo.xsp, 100, Level.WORLD_HEIGHT * 3 - 10 - 20);
-        font.draw(batcher, "ysp: " + mo.ysp, 100, Level.WORLD_HEIGHT * 3 - 10 - 40);
-
-        font.draw(batcher, "grounded: ", 400, Level.WORLD_HEIGHT * 3 - 10);
-        font.draw(batcher, "in air: ", 400, Level.WORLD_HEIGHT * 3 - 10 - 20);
-        if (mo.grounded || mo.inAir) {
-            font.setColor(Color.GREEN);
-            int shift;
-            if (mo.inAir) {
-                shift = -20;
-            } else {
-                shift = 0;
-            }
-            font.draw(batcher, "YES", 480, Level.WORLD_HEIGHT * 3 - 10 + shift);
-        }
-        if(mo.hurt){
-            font.setColor(Color.RED);
-            font.draw(batcher, "hurt", 400, Level.WORLD_HEIGHT * 3 - 10 -40);
-        }
-    }
-
     //GRAPHICS MODE---------------------------------------------------------------------
     private void drawWorld() {
         CustomLevel level = world.level;
@@ -290,58 +255,30 @@ public class PlainWorldScreen implements Screen {
         }
     }
 
-    //
-    private void drawBoo() {
-        Boo boo = world.boo;
+    private void drawGoombas() {
         batcher.setColor(Color.WHITE);
-        switch (boo.state) {
-            case Boo.STATE_IDLE:
-                //Mo.Left/Right == -1/1 respectively
-                if (boo.facing.x == Mo.RIGHT) {
-                    batcher.draw(Assets.T[1], boo.position.x, boo.position.y,
-                            Boo.BOO_WIDTH, Boo.BOO_HEIGHT);
-                } else if (boo.facing.x == Mo.LEFT) {
-                    batcher.draw(Assets.T[1], boo.position.x + Boo.BOO_WIDTH, boo.position.y,
-                            -Boo.BOO_WIDTH, Boo.BOO_HEIGHT);
-                }
-                break;
-            case Boo.STATE_CHASE:
-                if (boo.facing.x == Mo.RIGHT) {
-                    batcher.draw(Assets.T[2], boo.position.x, boo.position.y,
-                            Boo.BOO_WIDTH, Boo.BOO_HEIGHT);
-                } else if (boo.facing.x == Mo.LEFT) {
-                    batcher.draw(Assets.T[2], boo.position.x + Boo.BOO_WIDTH, boo.position.y,
-                            -Boo.BOO_WIDTH, Boo.BOO_HEIGHT);
-                }
-                break;
-
-        }
-    }
-
-    //
-    private void drawGoomba() {
-        Goomba goomba = world.goomba;
-        batcher.setColor(Color.WHITE);
-        TextureRegion region = Assets.goombaAnim.getKeyFrame(goomba.stateTime,
-                Animation.ANIMATION_LOOPING);
-        // TODO: 10/10/2018 guaranteed facing LEFT or RIGHT (don't need second condition)
-        if (goomba.facing.x == Goomba.RIGHT) {
-            batcher.draw(region, goomba.position.x, goomba.position.y,
-                    Goomba.GOOMBA_WIDTH, Goomba.GOOMBA_HEIGHT);
-        } else if (goomba.facing.x == Goomba.LEFT) {
-            batcher.draw(region, goomba.position.x + Goomba.GOOMBA_WIDTH, goomba.position.y,
-                    -Goomba.GOOMBA_WIDTH, Goomba.GOOMBA_HEIGHT);
+        for (int i = world.goombas.size() - 1; i >= 0; i--) {
+            Goomba goomba = world.goombas.get(i);
+            TextureRegion region = Assets.goombaAnim.getKeyFrame(goomba.stateTime,
+                    Animation.ANIMATION_LOOPING);
+            // TODO: 10/10/2018 guaranteed facing LEFT or RIGHT (don't need second condition)
+            if (goomba.facing.x == Goomba.RIGHT) {
+                batcher.draw(region, goomba.position.x, goomba.position.y,
+                        Goomba.GOOMBA_WIDTH, Goomba.GOOMBA_HEIGHT);
+            } else if (goomba.facing.x == Goomba.LEFT) {
+                batcher.draw(region, goomba.position.x + Goomba.GOOMBA_WIDTH, goomba.position.y,
+                        -Goomba.GOOMBA_WIDTH, Goomba.GOOMBA_HEIGHT);
+            }
         }
     }
 
     private void drawMo() {
         Mo mo = world.mo;
-        if(mo.hurt) {
+        if (mo.hurt) {
             batcher.setColor(Color.RED);
-        }else{
+        } else {
             batcher.setColor(Color.WHITE);
         }
-//        batcher.setColor(Color.RED);
         batcher.draw(Assets.wall, mo.position.x, mo.position.y);
 //        batcher.setColor(Color.BLACK);
 //        batcher.draw(Assets.wall, mo.bounds.lowerLeft.x, mo.bounds.lowerLeft.y);
@@ -350,7 +287,6 @@ public class PlainWorldScreen implements Screen {
     public void update(float deltaTime) {
         input();
         camera.update();
-        guiCam.update();
         world.update(deltaTime);
 //        cameraFollowPlayer();
     }
@@ -366,8 +302,7 @@ public class PlainWorldScreen implements Screen {
             batcher.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
             batcher.begin();
             drawWorld();
-            drawBoo();
-            drawGoomba();
+            drawGoombas();
             drawMo();
             batcher.end();
         }
@@ -378,19 +313,10 @@ public class PlainWorldScreen implements Screen {
             shapeRenderer.setProjectionMatrix(camera.combined);
             shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
             drawWorldBounds();
-            drawBooBounds();
-            drawGoombaBounds();
             drawMoBounds();
             drawRay();
 //            drawBlocks();       //128 * 128
             shapeRenderer.end();
-
-            /*Draw text*/
-            batcher.setProjectionMatrix(guiCam.combined.scl(0.33333f));
-            batcher.begin();
-            drawPlayerInfo();
-//            drawGhostInfo();
-            batcher.end();
         }
     }
 

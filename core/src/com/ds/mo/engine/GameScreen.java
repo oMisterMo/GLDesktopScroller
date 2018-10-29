@@ -9,21 +9,24 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 //import com.badlogic.gdx.math.collision.Ray;
-import com.ds.mo.common.Animation;
 import com.ds.mo.common.OverlapTester;
 import com.ds.mo.common.Particle;
 import com.ds.mo.common.Rectangle;
 import com.ds.mo.engine.effects.FireParticleSystem;
-import com.ds.mo.engine.logic.Boo;
-import com.ds.mo.engine.logic.Goomba;
 import com.ds.mo.engine.logic.Level;
 import com.ds.mo.engine.logic.Mo;
 import com.ds.mo.engine.logic.Tile;
 import com.ds.mo.engine.logic.World;
+import com.ds.mo.engine.transition.FadeInTransitionEffect;
+import com.ds.mo.engine.transition.FadeOutTransitionEffect;
+import com.ds.mo.engine.transition.TransitionEffect;
+import com.ds.mo.engine.transition.TransitionScreen;
+import com.ds.mo.engine.transition.WaitEffect;
+
+import java.util.ArrayList;
 
 public class GameScreen implements Screen {
     private static final float WORLD_WIDTH = 320;
@@ -93,6 +96,18 @@ public class GameScreen implements Screen {
 //        fs = new FireParticleSystem(new Vector2(70 + (16 * 6), 54), FireParticleSystem.RED);
     }
 
+    private void transition(Screen nextScreen) {
+        //Transition
+        Screen current = this;
+        Screen next = nextScreen;
+        ArrayList<TransitionEffect> effects = new ArrayList<TransitionEffect>();
+        effects.add(new FadeOutTransitionEffect(0.5f));
+        effects.add(new WaitEffect(0.5f));
+        effects.add(new FadeInTransitionEffect(0.5f));
+        Screen transitionScreen = new TransitionScreen(game, camera, current, next, effects);
+        game.setScreen(transitionScreen);
+    }
+
     private void input() {
         if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
             world.restart();    //or world = null; -> world = new World();
@@ -106,36 +121,44 @@ public class GameScreen implements Screen {
             System.out.println("DrawMode: " + drawMode);
         }
 
-        if(Gdx.input.isKeyJustPressed(Input.Keys.O)){
+        if (Gdx.input.isKeyJustPressed(Input.Keys.O)) {
             //Action key pressed
             enterDoors();
         }
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.L)) {
-            game.setScreen(new PlainWorldScreen(game));
+
+            transition(new FairWorldScreen(game));
             return;
         }
     }
 
-    private void enterDoors(){
+    private void enterDoors() {
         Rectangle mo = world.mo.bounds;
         Rectangle door1 = world.level.tiles[world.door1.y][world.door1.x].bounds;
         Rectangle door2 = world.level.tiles[world.door2.y][world.door2.x].bounds;
         Rectangle door3 = world.level.tiles[world.door3.y][world.door3.x].bounds;
-        if(OverlapTester.overlapRectangles(mo, door1)){
+        if (OverlapTester.overlapRectangles(mo, door1)) {
             System.out.println("PRESSED O IN DOOR");
-            game.setScreen(new PlainWorldScreen(game));
+
+            transition(new FairWorldScreen(game));
             return;
+//            game.setScreen(new FairWorldScreen(game));
+//            return;
         }
-        if(OverlapTester.overlapRectangles(mo, door2)){
+        if (OverlapTester.overlapRectangles(mo, door2)) {
             System.out.println("PRESSED O IN DOOR");
-            game.setScreen(new FairWorldScreen(game));
+            transition(new PlainWorldScreen(game));
             return;
+//            game.setScreen(new PlainWorldScreen(game));
+//            return;
         }
-        if(OverlapTester.overlapRectangles(mo, door3)){
+        if (OverlapTester.overlapRectangles(mo, door3)) {
             System.out.println("PRESSED O IN DOOR");
-            game.setScreen(new InsaneWorldScreen(game));
+            transition(new InsaneWorldScreen(game));
             return;
+//            game.setScreen(new InsaneWorldScreen(game));
+//            return;
         }
     }
 
@@ -410,6 +433,27 @@ public class GameScreen implements Screen {
         }
     }
 
+    private void drawPlayerInfoUpdated() {
+        Mo mo = world.mo;
+        font.setColor(Color.WHITE);
+        font.draw(batcher, "pos: " + mo.position, 100, Level.WORLD_HEIGHT * 3 - 10);
+        font.draw(batcher, "xsp: " + mo.velocity.x, 100, Level.WORLD_HEIGHT * 3 - 10 - 20);
+        font.draw(batcher, "ysp: " + mo.velocity.y, 100, Level.WORLD_HEIGHT * 3 - 10 - 40);
+
+        font.draw(batcher, "grounded: ", 400, Level.WORLD_HEIGHT * 3 - 10);
+        font.draw(batcher, "in air: ", 400, Level.WORLD_HEIGHT * 3 - 10 - 20);
+        if (mo.grounded || mo.inAir) {
+            font.setColor(Color.GREEN);
+            int shift;
+            if (mo.inAir) {
+                shift = -20;
+            } else {
+                shift = 0;
+            }
+            font.draw(batcher, "YES", 480, Level.WORLD_HEIGHT * 3 - 10 + shift);
+        }
+    }
+
     private void drawRandom() {
         Mo mo = world.mo;
         //Get two floor tiles below player
@@ -588,9 +632,7 @@ public class GameScreen implements Screen {
                         16, 16, p.scale, p.scale,
                         p.rotation);
             }
-
         }
-
 ////        batcher.setColor(blueFire.r, blueFire.g, blueFire.b, blueFire.a);
 //        len = fs.particles.size();
 //        for (int i = len - 1; i >= 0; i--) {
@@ -682,7 +724,8 @@ public class GameScreen implements Screen {
             /*Draw text*/
             batcher.setProjectionMatrix(guiCam.combined.scl(0.33333f));
             batcher.begin();
-            drawPlayerInfo();
+//            drawPlayerInfo();
+            drawPlayerInfoUpdated();
             batcher.end();
         }
     }

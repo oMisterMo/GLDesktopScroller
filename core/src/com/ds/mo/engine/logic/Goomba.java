@@ -19,18 +19,18 @@ public class Goomba extends DynamicGameObject {
     private static final int TERMINAL_VELOCITY = 16;
     public static final float GRAV = -10;
     public static final Vector2 gravity = new Vector2(0, GRAV);
-    public boolean grounded;
-    public boolean inAir;
+//    public boolean grounded;
+//    public boolean inAir;
 
-    public Ray leftFoot;
-    public Ray rightFoot;
-    public Ray rightSen;
-    public Ray leftSen;
+//    public Ray leftFoot;
+//    public Ray rightFoot;
+//    public Ray rightSen;
+//    public Ray leftSen;
 
     public Vector2 facing;
 
     public float stateTime;
-    private Vector2 temp = new Vector2();
+//    private Vector2 temp = new Vector2();
 
     public Goomba(float x, float y) {
         super(x, y, GOOMBA_WIDTH, GOOMBA_HEIGHT);
@@ -39,25 +39,8 @@ public class Goomba extends DynamicGameObject {
         speed = 60 / 4;  //temp speed
 
         facing = new Vector2(RIGHT, 0);
-        initRay();
 
         stateTime = 0;
-    }
-
-    private void initRay() {
-//        Vector2 temp = new Vector2();
-        temp.set(position);
-        temp.x += 2;
-        temp.y += GOOMBA_HEIGHT / 2;
-        leftFoot = new Ray(temp, new Vector2(0, -1));
-        temp.x = position.x + GOOMBA_WIDTH - 2;
-        rightFoot = new Ray(temp, new Vector2(0, -1));
-
-        temp.set(position);
-        temp.x += Goomba.GOOMBA_WIDTH / 2;
-        temp.y += Goomba.GOOMBA_HEIGHT / 2;
-        leftSen = new Ray(temp, new Vector2(-1, 0));
-        rightSen = new Ray(temp, new Vector2(1, 0));
     }
 
     public boolean isMoving() {
@@ -85,20 +68,20 @@ public class Goomba extends DynamicGameObject {
         this.speed = speed;
     }
 
-    private void updateRay() {
-        temp.set(position);
-        temp.x += 2;
-        temp.y += GOOMBA_HEIGHT / 2;
-        leftFoot.start.set(temp);
-        temp.x = position.x + GOOMBA_WIDTH - 2;
-        rightFoot.start.set(temp);
-        //horizontal sensors
-        temp.set(position);
-        temp.x += Goomba.GOOMBA_WIDTH / 2;
-        temp.y += Goomba.GOOMBA_HEIGHT / 2;
-        leftSen.start.set(temp);
-        rightSen.start.set(temp);
-    }
+//    private void updateRay() {
+//        temp.set(position);
+//        temp.x += 2;
+//        temp.y += GOOMBA_HEIGHT / 2;
+//        leftFoot.start.set(temp);
+//        temp.x = position.x + GOOMBA_WIDTH - 2;
+//        rightFoot.start.set(temp);
+//        //horizontal sensors
+//        temp.set(position);
+//        temp.x += Goomba.GOOMBA_WIDTH / 2;
+//        temp.y += Goomba.GOOMBA_HEIGHT / 2;
+//        leftSen.start.set(temp);
+//        rightSen.start.set(temp);
+//    }
 
     public void update(float deltaTime) {
         //Move enemy
@@ -114,6 +97,7 @@ public class Goomba extends DynamicGameObject {
         //Update position
         position.add(velocity);
         bounds.lowerLeft.set(position);
+
 
         updateRay();
     }

@@ -68,7 +68,7 @@ public class World {
 
     private void checkFloorPoint() {
         Tile bl = worldToTile(mo.position.x, mo.position.y - 1);
-        Tile br = worldToTile(mo.position.x + Mo.MO_WIDTH, mo.position.y - 1);
+        Tile br = worldToTile(mo.position.x + mo.bounds.width, mo.position.y - 1);
         if (!bl.solid && !br.solid) {
             System.out.println("left and right POINT: NOT HIT");
 //            left_hit = right_hit = false;
@@ -81,7 +81,7 @@ public class World {
     private void horizontal() {
         //if moving left
         int gap = 1;        //push away from tile 1 unit
-        if (mo.xsp < 0) {
+        if (mo.velocity.x < 0) {
 //            System.out.println("Double (checking for LEFT wall");
             for (int y = 0; y < Level.NO_OF_TILES_Y; y++) {
                 for (int x = 0; x < Level.NO_OF_TILES_X; x++) {
@@ -92,7 +92,8 @@ public class World {
                             mo.position.x = t.bounds.lowerLeft.x + t.bounds.width + gap;
 
                             mo.bounds.lowerLeft.set(mo.position);
-                            mo.xsp = 0;
+                            mo.xsp = 0; //not needed
+                            mo.velocity.x = 0;
                             return;
                         }
                     }
@@ -101,7 +102,7 @@ public class World {
 
         }
         //if moving right
-        if (mo.xsp > 0) {
+        if (mo.velocity.x > 0) {
 //            System.out.println("Double (checking for RIGHT wall");
             for (int y = 0; y < Level.NO_OF_TILES_Y; y++) {
                 for (int x = 0; x < Level.NO_OF_TILES_X; x++) {
@@ -111,7 +112,7 @@ public class World {
                         if (mo.position.x + Mo.MO_WIDTH >= t.bounds.lowerLeft.x) {
                             mo.position.x = t.bounds.lowerLeft.x - Mo.MO_WIDTH - gap;
                             mo.bounds.lowerLeft.set(mo.position);
-                            mo.xsp = 0;
+                            mo.velocity.x = 0;
                             return;
                         }
                     }
@@ -121,7 +122,8 @@ public class World {
     }
 
     private void floor() {
-        if (mo.ysp < 0) {
+//        if (mo.ysp < 0) {
+        if (mo.velocity.y < 0) {
 //            System.out.println("Double (checking for FLOOR)");
             //If player is moving down
             for (int y = 0; y < Level.NO_OF_TILES_Y; y++) {
@@ -131,13 +133,12 @@ public class World {
                     if (OverlapTester.intersectRayBounds(mo.leftFoot, t.bounds, intersect) ||
                             OverlapTester.intersectRayBounds(mo.rightFoot, t.bounds, intersect)) {
                         if (mo.position.y <= intersect.y) {
-//                            left_hit = true;
-//                            right_hit = true;
                             mo.grounded = true;
                             mo.inAir = false;
                             mo.position.y = t.bounds.lowerLeft.y + t.bounds.height;
                             mo.bounds.lowerLeft.set(mo.position);
-                            mo.ysp = 0;
+//                            mo.ysp = 0;
+                            mo.velocity.y = 0;
                             return;
                         }
                     }
@@ -152,7 +153,7 @@ public class World {
     }
 
     private void ceiling() {
-        if (mo.ysp > 0) {
+        if (mo.velocity.y > 0) {
 //            System.out.println("Double (checking for FLOOR)");
             //If player is moving up
             for (int y = 0; y < Level.NO_OF_TILES_Y; y++) {
@@ -165,7 +166,8 @@ public class World {
                         if (mo.position.y + Mo.MO_HEIGHT > intersect.y) {
                             mo.position.y = intersect.y - Mo.MO_HEIGHT - gap;
                             mo.bounds.lowerLeft.set(mo.position);
-                            mo.ysp = 0;
+//                            mo.ysp = 0;
+                            mo.velocity.y = 0;
                         }
                     }
                 }

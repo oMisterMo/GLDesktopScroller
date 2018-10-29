@@ -70,7 +70,7 @@ public class Assets {
                 count += 1;
             }
         }
-        goombaAnim = new Animation(0.2f, T[13], T[14]);
+        goombaAnim = new Animation(0.2f, T[13], T[15]);
 //        goombaAnim.setPlayMode(Animation.PlayMode.LOOP);
         particle = new TextureRegion(worldAtlas, 0,0,16,16);
 

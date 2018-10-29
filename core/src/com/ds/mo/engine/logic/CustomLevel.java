@@ -22,7 +22,7 @@ public class CustomLevel {
     private int[] solidTiles = {3, 4, 5, 6, 16, 17, 18, 19, 20, 21, 32, 34, 35, 36, 37, 38, 39, 40,
             49, 50, 51, 52, 53, 54, 64, 65, 66, 67, 80, 81, 82, 83, 84, 85, 86, 87, 88, 96, 97, 98,
             99, 101, 102, 103, 104, 112, 113, 114, 115, 140, 141, 142, 156, 157, 158, 172, 173, 174,
-            220, 221, 222, 236, 237, 238, 252, 253, 254};
+            220, 221, 222, 236, 237, 238, 252, 253, 254, 14};   //14 = spike
 
     public CustomLevel(int xTiles, int yTiles) {
         System.out.println("Loading CUSTOM level...");
@@ -135,6 +135,23 @@ public class CustomLevel {
         if (isSolidTile(t.id)) t.solid = true;
     }
 
+    /**
+     * Set the tiles individually
+     *
+     * @param t
+     */
+    private void setDeathTile(Tile t) {
+//        /*ATTEMPT 1*/
+//        if (t.id == 140 || t.id == 141 || t.id == 142 || t.id == 156 || t.id == 158
+//                || t.id == 172 || t.id == 173 || t.id == 174
+//                || t.id == 3 || t.id == 19 || t.id == 104) {
+//            t.solid = true;
+//        }
+
+        /*ATTEMPT 2*/
+        if (t.id == 14) t.death = true;
+    }
+
     public void loadLevel(String levelName) {
         System.out.println("Loading json map....");
         JsonReader jsonReader = new JsonReader();
@@ -149,6 +166,7 @@ public class CustomLevel {
             Tile t = tiles[y][x];
             t.id = id[i] - 1;
             setSolidTile(t);
+            setDeathTile(t);
         }
     }
 

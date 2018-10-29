@@ -47,6 +47,7 @@ public class Tile extends GameObject {
     public int id = EMPTY;    //-1
     public boolean solid;
     public boolean hit;         // TODO: 05/11/2017 for debugging, can delete when not needed
+    public boolean death;       //one hit kill on this tile
 
     public Point grid;
 
@@ -56,6 +57,7 @@ public class Tile extends GameObject {
         this.hit = false;
         this.id = EMPTY;
         this.grid = grid;
+        this.death = false;
     }
 
     @Override
